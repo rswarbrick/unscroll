@@ -1,20 +1,49 @@
-#include <cairo.h>
+#include <poppler.h>
+#include <glib.h>
 
-int main(int argc, char** argv)
+PopplerDocument *document_from_filename (char* filename)
 {
-  cairo_surface_t *surface =
-    cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 240, 80);
-  cairo_t *cr =
-    cairo_create (surface);
+  PopplerDocument  *ret;
+  gchar            *uri;
+  GError           *error = NULL;
+  GFile            *file;
 
-  cairo_select_font_face (cr, "serif", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
-  cairo_set_font_size (cr, 32.0);
-  cairo_set_source_rgb (cr, 0.0, 0.0, 1.0);
-  cairo_move_to (cr, 10.0, 50.0);
-  cairo_show_text (cr, "Hello, world");
+  file = g_file_new_for_commandline_arg (filename);
+  uri = g_file_get_uri (file);
+  g_object_unref (file);
 
-  cairo_destroy (cr);
-  cairo_surface_write_to_png (surface, "hello.png");
-  cairo_surface_destroy (surface);
+  ret = poppler_document_new_from_file (uri, NULL, &error);
+  if (error) {
+    g_print ("Error reading PDF: %s\n", error->message);
+    g_error_free (error);
+    g_free (uri);
+    return NULL;
+  }
+  g_free (uri);
+
+  return ret;
+}
+
+int main (int argc, char** argv)
+{
+  PopplerDocument  *document;
+  gchar            *uri;
+  GError           *error = NULL;
+  GFile *file;
+
+  g_type_init();
+
+  if (argc != 2) {
+    g_print ("Usage: unscroll FILE\n");
+    return 1;
+  }
+
+  document = document_from_filename (argv[1]);
+  if (!document) return 1;
+
+  
+  
+  g_object_unref (document);
+	
   return 0;
 }
