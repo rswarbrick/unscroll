@@ -1,5 +1,6 @@
 #include <poppler.h>
 #include <glib.h>
+#include "page.h"
 
 PopplerDocument *document_from_filename (char* filename)
 {
@@ -27,9 +28,7 @@ PopplerDocument *document_from_filename (char* filename)
 int main (int argc, char** argv)
 {
   PopplerDocument  *document;
-  gchar            *uri;
-  GError           *error = NULL;
-  GFile *file;
+  PageInfo *pi;
 
   g_type_init();
 
@@ -41,9 +40,12 @@ int main (int argc, char** argv)
   document = document_from_filename (argv[1]);
   if (!document) return 1;
 
+  pi = analyse_page (document, 1);
   
-  
+  print_page_info (pi);
+
   g_object_unref (document);
-	
+  free_page_info (&pi);
+
   return 0;
 }
