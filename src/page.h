@@ -6,9 +6,9 @@
 #include <poppler.h>
 
 typedef struct _PageInfo PageInfo;
-typedef struct _GapData GapData;
+typedef struct _HunkData HunkData;
 
-struct _GapData {
+struct _HunkData {
   int start;
   int end;
 };
@@ -16,8 +16,8 @@ struct _GapData {
 struct _PageInfo {
   GdkRectangle bbox;
 
-  guint  num_gaps;
-  GapData *gaps;
+  guint  num_hunks;
+  HunkData *hunks;
 };
 
 PageInfo *analyse_page (PopplerDocument *doc, guint page_num);

@@ -73,40 +73,40 @@ static guint last_zero (const gboolean *seq, guint length)
   return i;
 }
 
-static GapData* find_gaps (const gboolean *lines, guint length,
-                           guint* bbstart, guint* bbend, guint* count)
+static HunkData* find_hunks (const gboolean *lines, guint length,
+                             guint* bbstart, guint* bbend, guint* count)
 {
   g_assert(lines && bbstart && bbend && count);
 
-  *count = num_enclosed_white_regions (lines, length);
-  guint i, start, gap_n = 0;
+  *count = num_enclosed_white_regions (lines, length) + 1;
+  guint i, start, hunk_n = 0;
   gboolean last = FALSE;
 
-  GapData *gaps = g_new(GapData, *count);
+  HunkData *hunks = g_new(HunkData, *count);
 
   // Set i to be the first non-white line.
   i = first_zero (lines, length);
   *bbstart = i;
+  start = i;
 
-  // Walk down the lines, setting GapData as we go.
+  // Walk down the lines, setting HunkData as we go.
   for (; i < length; i++) {
-    if (!*(lines + i)) {
-      if (last) {
-        (gaps+gap_n)->start = start;
-        (gaps+gap_n)->end = i;
-        gap_n++;
-        start = i; // For finding bbend.
+    if (*(lines + i)) {
+      if (!last) {
+        (hunks+hunk_n)->start = start;
+        (hunks+hunk_n)->end = i;
+        hunk_n++;
+        *bbend = i-1;
       }
     } else {
-      if (!last) {
+      if (last) {
         start = i;
       }
     }
     last = *(lines + i);
   }
-  *bbend = start-1;
 
-  return gaps;
+  return hunks;
 }
 
 PageInfo *analyse_page (PopplerDocument *doc, guint page_num)
@@ -143,9 +143,9 @@ PageInfo *analyse_page (PopplerDocument *doc, guint page_num)
   find_white (image, &white_rows, &white_cols);
   g_object_unref (image);
 
-  guint firstrow, lastrow, gapscount;
-  GapData* gaps = find_gaps (white_rows, height,
-                             &firstrow, &lastrow, &gapscount);
+  guint firstrow, lastrow, hunkscount;
+  HunkData* hunks = find_hunks (white_rows, height,
+                                &firstrow, &lastrow, &hunkscount);
 
   info = g_new (PageInfo, 1);
   info->bbox.x = first_zero (white_cols, width);
@@ -158,8 +158,8 @@ PageInfo *analyse_page (PopplerDocument *doc, guint page_num)
   info->bbox.y = firstrow;
   info->bbox.height = lastrow - firstrow;
 
-  info->num_gaps = gapscount;
-  info->gaps = gaps;
+  info->num_hunks = hunkscount;
+  info->hunks = hunks;
 
   g_free (white_rows);
   g_free (white_cols);
@@ -172,16 +172,16 @@ void print_page_info (const PageInfo *pi)
 
   printf ("Bounding box (x,y,w,h) = (%d, %d, %d, %d)\n",
           pi->bbox.x, pi->bbox.y, pi->bbox.width, pi->bbox.height);
-  printf ("Gaps:\n");
+  printf ("Hunks:\n");
 
-  for (i=0; i < pi->num_gaps; i++) {
-    printf ("%5d to %5d\n", (pi->gaps+i)->start, (pi->gaps+i)->end);
+  for (i=0; i < pi->num_hunks; i++) {
+    printf ("%5d to %5d\n", (pi->hunks+i)->start, (pi->hunks+i)->end);
   }
 }
 
 void free_page_info (PageInfo **pi)
 {
-  g_free ((*pi)->gaps);
+  g_free ((*pi)->hunks);
   g_free (*pi);
   *pi = NULL;
 }
