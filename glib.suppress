@@ -1,0 +1,52 @@
+#
+# Valgrind suppression file for ignoring glib warnings
+#
+
+{
+  g_type_init
+  Memcheck:Leak
+  ...
+  fun:g_type_init
+  ...
+}
+
+{
+  fontconfig
+  Memcheck:Leak
+  ...
+  fun:FcConfigParseAndLoad
+  ...
+}
+
+{
+  g_get_home_dir
+  Memcheck:Leak
+  ...
+  fun:g_get_home_dir
+  ...
+}
+
+{
+  dll_stuff
+  Memcheck:Leak
+  ...
+  fun:call_init
+  fun:_dl_init
+  ...
+}
+
+{
+  glib_static_types
+  Memcheck:Leak
+  ...
+  fun:g_type_register_static
+  ...
+}
+
+{
+  g_type_class_ref
+  Memcheck:Leak
+  ...
+  fun:g_type_class_ref
+  ...
+}
