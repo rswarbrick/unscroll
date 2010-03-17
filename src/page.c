@@ -117,7 +117,6 @@ PageInfo *analyse_page (PopplerDocument *doc, guint page_num)
   GdkPixbuf *image;
   double width_points, height_points;
   int width, height;
-  double scale = 1.5;
 
   gboolean *white_rows, *white_cols;
 
@@ -127,8 +126,8 @@ PageInfo *analyse_page (PopplerDocument *doc, guint page_num)
   }
 
   poppler_page_get_size (page, &width_points, &height_points);
-  width = (int) ((width_points * scale) + 0.5);
-  height = (int) ((height_points * scale) + 0.5);
+  width = (int) ((width_points * ZOOM_SCALE) + 0.5);
+  height = (int) ((height_points * ZOOM_SCALE) + 0.5);
 
   image = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, width, height);
   if (!image) {
@@ -137,7 +136,7 @@ PageInfo *analyse_page (PopplerDocument *doc, guint page_num)
   }
 
   poppler_page_render_to_pixbuf (page, 0, 0, width, height,
-                                 scale, 0, image);
+                                 ZOOM_SCALE, 0, image);
   g_object_unref (page);
 
   find_white (image, &white_rows, &white_cols);
@@ -163,6 +162,7 @@ PageInfo *analyse_page (PopplerDocument *doc, guint page_num)
 
   g_free (white_rows);
   g_free (white_cols);
+
   return info;
 }
 

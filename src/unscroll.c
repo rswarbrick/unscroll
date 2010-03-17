@@ -1,6 +1,7 @@
 #include <poppler.h>
 #include <glib.h>
 #include "hunks.h"
+#include "render.h"
 
 PopplerDocument *document_from_filename (char* filename)
 {
@@ -41,6 +42,8 @@ int main (int argc, char** argv)
   if (!document) return 1;
 
   pm = find_new_layout (document);
+
+  render_pdf (document, pm, "out.pdf");
   
   destroy_page_mappings (&pm);
 

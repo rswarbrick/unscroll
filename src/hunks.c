@@ -44,7 +44,6 @@ static void rectangles_from_page (PopplerDocument *doc, guint pagenum,
     *list = g_slist_prepend (*list, rect);
   }
 
-  print_page_info (pi);
   free_page_info (&pi);
 }
 
@@ -78,10 +77,12 @@ static GSList *collate_pages (GSList **pages, double bbox_rel_height)
       MappedRectangle *mr = g_new(MappedRectangle, 1);
       mr->src_page = sr->src_page;
       memcpy (&mr->src, &sr->src, sizeof(GdkRectangle));
+
       mr->dest.x = 0;
       mr->dest.width = 1;
       mr->dest.y = current_height + gap_height;
       mr->dest.height = hunk_height;
+
       this_page = g_slist_prepend (this_page, mr);
 
       current_height += hunk_height + gap_height;
@@ -121,11 +122,15 @@ GSList *find_new_layout (PopplerDocument* doc)
   }
   srlist = g_slist_reverse (srlist);
 
+  printf ("Hunks found:  %5d\n", g_slist_length (srlist));
+
   paged_lists = collate_pages (&srlist, 1.46);
 
-  printf ("Length: %d\n", g_slist_length(paged_lists));
+  printf ("Pages before: %5d\nPages after:  %5d\n",
+          poppler_document_get_n_pages (doc),
+          g_slist_length (paged_lists));
 
-  return NULL;
+  return paged_lists;
 }
 
 void destroy_page_mappings (GSList **pages)
@@ -137,4 +142,14 @@ void destroy_page_mappings (GSList **pages)
   }
   g_slist_free (*pages);
   *pages = NULL;
+}
+
+void
+print_mapped_rectangle (const MappedRectangle* mr)
+{
+  printf ("Rectangle from page %3d, x=%d, y=%d, w=%d, h=%d\n",
+          mr->src_page,
+          mr->src.x, mr->src.y, mr->src.width, mr->src.height);
+  printf ("            to           x=%f, y=%f, w=%f, h=%f\n",
+          mr->dest.x, mr->dest.y, mr->dest.width, mr->dest.height);
 }
