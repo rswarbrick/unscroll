@@ -1,15 +1,17 @@
 #include "render.h"
-#include "page.h"
 #include "hunks.h"
+#include "unscroll.h"
 #include <stdlib.h>
 #include <math.h>
 #include <cairo.h>
+
+extern Settings settings;
 
 static cairo_surface_t*
 make_page_surface (PopplerPage *page)
 {
   double width, height;
-  double scale_factor = ZOOM_SCALE;
+  double scale_factor = settings.dpi / 72.0;
   cairo_surface_t *surface;
   cairo_t *cr;
 

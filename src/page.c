@@ -1,7 +1,10 @@
 #include "page.h"
+#include "unscroll.h"
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <string.h>
 #include <stdio.h>
+
+extern Settings settings;
 
 static void find_white (const GdkPixbuf *buf,
                         gboolean **rows, gboolean **cols)
@@ -125,9 +128,12 @@ PageInfo *analyse_page (PopplerDocument *doc, guint page_num)
     g_error ("Couldn't open page %d of document", page_num);
   }
 
+  /* There are 72 points in an inch. So width and height should be
+   * multiplied by settings.dpi / 72.0 */
+
   poppler_page_get_size (page, &width_points, &height_points);
-  width = (int) ((width_points * ZOOM_SCALE) + 0.5);
-  height = (int) ((height_points * ZOOM_SCALE) + 0.5);
+  width = (int) ((width_points * settings.dpi / 72.0) + 0.5);
+  height = (int) ((height_points * settings.dpi / 72.0) + 0.5);
 
   image = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, width, height);
   if (!image) {
@@ -136,7 +142,7 @@ PageInfo *analyse_page (PopplerDocument *doc, guint page_num)
   }
 
   poppler_page_render_to_pixbuf (page, 0, 0, width, height,
-                                 ZOOM_SCALE, 0, image);
+                                 settings.dpi / 72.0, 0, image);
   g_object_unref (page);
 
   find_white (image, &white_rows, &white_cols);

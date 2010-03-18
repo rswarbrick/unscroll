@@ -8,8 +8,6 @@
 typedef struct _PageInfo PageInfo;
 typedef struct _HunkData HunkData;
 
-#define ZOOM_SCALE 1.5f
-
 struct _HunkData {
   int start;
   int end;

@@ -4,12 +4,9 @@
 #include <stdlib.h>
 #include "hunks.h"
 #include "render.h"
+#include "unscroll.h"
 
-static struct {
-  double dpi;
-  const char* infile;
-  const char* outfile;
-} settings;
+Settings settings;
 
 static struct poptOption options[] = {
   { "dpi", 'd', POPT_ARG_DOUBLE, &settings.dpi, 0,
@@ -63,8 +60,6 @@ static void read_arguments (int argc, const char** argv)
   if (poptPeekArg (popt)) {
     fprintf (stderr, "Extra arguments on the command line ignored.\n");
   }
-
-  printf ("dpi = %f\n", settings.dpi);
 
   poptFreeContext (popt);
 }
