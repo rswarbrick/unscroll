@@ -4,8 +4,12 @@
 #include <stdlib.h>
 #include <math.h>
 #include <cairo.h>
+#include <cairo-pdf.h>
 
 extern Settings settings;
+
+static cairo_surface_t* rendered_page = NULL;
+static int rendered_page_num = -1;
 
 static cairo_surface_t*
 make_page_surface (PopplerPage *page)
@@ -35,6 +39,39 @@ make_page_surface (PopplerPage *page)
 }
 
 static void
+free_rendered_page ()
+{
+  if (rendered_page) {
+    cairo_surface_destroy (rendered_page);
+    rendered_page = NULL;
+  }
+  rendered_page_num = -1;
+}
+
+static cairo_surface_t*
+get_rendered_page (PopplerDocument *doc, int n)
+{
+  PopplerPage *page;
+
+  if ((n != rendered_page_num) || !rendered_page) {
+    free_rendered_page ();
+
+    page = poppler_document_get_page (doc, n);
+    rendered_page = make_page_surface (page);
+    if (cairo_surface_status (rendered_page) != CAIRO_STATUS_SUCCESS) {
+      printf ("Failed to render page to cairo surface. Error: %s\n",
+              cairo_status_to_string (cairo_surface_status (rendered_page)));
+      exit(1);
+    }
+    rendered_page_num = n;
+
+    g_object_unref (page);
+  }
+
+  return rendered_page;
+}
+
+static void
 render_pdf_page (PopplerDocument* doc, GSList *rects, cairo_t *cairo)
 {
   PopplerPage *page;
@@ -46,8 +83,6 @@ render_pdf_page (PopplerDocument* doc, GSList *rects, cairo_t *cairo)
   */
   double virt_to_out_scale = output_bb_width ();
 
-  cairo_surface_t *img;
-
   while (rects) {
     MappedRectangle *mr = (MappedRectangle *)rects->data;
     /*
@@ -57,13 +92,7 @@ render_pdf_page (PopplerDocument* doc, GSList *rects, cairo_t *cairo)
     */
     double scale = virt_to_out_scale / mr->src.width;
 
-    page = poppler_document_get_page (doc, mr->src_page);
-    img = make_page_surface (page);
-    if (cairo_surface_status (img) != CAIRO_STATUS_SUCCESS) {
-      printf ("Failed to render page to cairo surface. Error: %s\n",
-              cairo_status_to_string (cairo_surface_status (img)));
-      exit(1);
-    }
+    cairo_surface_t *img = get_rendered_page (doc, mr->src_page);
 
     cairo_identity_matrix (cairo);
     cairo_new_path (cairo);
@@ -83,9 +112,6 @@ render_pdf_page (PopplerDocument* doc, GSList *rects, cairo_t *cairo)
     cairo_paint (cairo);
 
     cairo_reset_clip (cairo);
-
-    g_object_unref (page);
-    cairo_surface_destroy (img);
 
     rects = g_slist_next (rects);
   }
@@ -107,6 +133,8 @@ render_pdf (PopplerDocument* doc, GSList *page_mappings, const char* fname)
     cairo_surface_show_page (surf);
     page_mappings = g_slist_next (page_mappings);
   }
+
+  free_rendered_page ();
 
   cairo_status_t status;
   status = cairo_status(cairo);
