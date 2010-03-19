@@ -5,6 +5,7 @@ typedef struct _Settings Settings;
 
 struct _Settings {
   double dpi;
+  int quality;
   const char* infile;
   const char* outfile;
   const char* papername;

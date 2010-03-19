@@ -1,4 +1,5 @@
 #include "jpeg.h"
+#include "unscroll.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -9,6 +10,8 @@
 static void init_destination (j_compress_ptr cinfo);
 static boolean empty_output_buffer (j_compress_ptr cinfo);
 static void term_destination (j_compress_ptr cinfo);
+
+extern Settings settings;
 
 /*
   While compressing, we maintain a singly linked list of guchar
@@ -138,6 +141,7 @@ make_jpeg_hunk (cairo_surface_t *img,
   cinfo.input_components = 3;
   cinfo.in_color_space = JCS_RGB;
   jpeg_set_defaults (&cinfo);
+  jpeg_set_quality (&cinfo, settings.quality, 1);
 
   jpeg_start_compress (&cinfo, TRUE);
   for (i = y; i < y+h; i++) {

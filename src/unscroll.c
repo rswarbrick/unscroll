@@ -12,6 +12,8 @@ Settings settings;
 static struct poptOption options[] = {
   { "dpi", 'd', POPT_ARG_DOUBLE, &settings.dpi, 0,
     "DPI at which to read the file", "150" },
+  { "quality", 'Q', POPT_ARG_INT, &settings.quality, 0,
+    "Jpeg compression quality", "75" },
   { "papersize", 's', POPT_ARG_STRING, &settings.papername, 0,
     "Size of output paper", "A4" },
   POPT_AUTOHELP
@@ -34,6 +36,7 @@ static void read_arguments (int argc, const char** argv)
 
   /* Set defaults */
   settings.dpi = 150.0;
+  settings.quality = 75;
 
   /* Read in all the standard options */
   while ((rc = poptGetNextOpt (popt)) > 0) {}
@@ -87,6 +90,13 @@ static void read_arguments (int argc, const char** argv)
   settings.psbottom = settings.pstop;
 
   paperdone ();
+
+  /* Sanity check for quality parameter */
+  if (settings.quality < 0 || settings.quality > 100) {
+    fprintf (stderr, "Invalid quality: %d is not in [0, 100]\n",
+             settings.quality);
+    exit (1);
+  }
 
   /* Check and warn if the user was over-enthusiastic with command
    * line options... */
