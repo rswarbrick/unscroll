@@ -41,10 +41,10 @@ render_pdf_page (PopplerDocument* doc, GSList *rects, cairo_t *cairo)
 
   /*
     The scaling from dimensions in [0,1] x [0,aspect] coordinates to
-    output coordinates. Since we know that the width of the page is
-    595.0 (todo!), this is just 595.0.
+    output coordinates. The output width in points is
+    output_bb_height.
   */
-  double virt_to_out_scale = 595.0;
+  double virt_to_out_scale = output_bb_width ();
 
   cairo_surface_t *img;
 
@@ -69,8 +69,8 @@ render_pdf_page (PopplerDocument* doc, GSList *rects, cairo_t *cairo)
     cairo_new_path (cairo);
 
     cairo_translate (cairo,
-                     mr->dest.x * virt_to_out_scale,
-                     mr->dest.y * virt_to_out_scale);
+                     settings.psleft + mr->dest.x * virt_to_out_scale,
+                     settings.pstop + mr->dest.y * virt_to_out_scale);
     cairo_rectangle (cairo,
                      0, 0,
                      mr->src.width * scale, mr->src.height * scale);
@@ -94,7 +94,9 @@ render_pdf_page (PopplerDocument* doc, GSList *rects, cairo_t *cairo)
 void
 render_pdf (PopplerDocument* doc, GSList *page_mappings, const char* fname)
 {
-  cairo_surface_t *surf = cairo_pdf_surface_create (fname, 595.0, 842.0);
+  cairo_surface_t *surf
+    = cairo_pdf_surface_create (fname, settings.pswidth, settings.psheight);
+
   if (cairo_surface_status (surf) != CAIRO_STATUS_SUCCESS) {
     g_error ("Could not create output surface at %s", fname);
   }

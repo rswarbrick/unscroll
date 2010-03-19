@@ -2,6 +2,7 @@
 #include <glib.h>
 #include <popt.h>
 #include <stdlib.h>
+#include <paper.h>
 #include "hunks.h"
 #include "render.h"
 #include "unscroll.h"
@@ -11,15 +12,19 @@ Settings settings;
 static struct poptOption options[] = {
   { "dpi", 'd', POPT_ARG_DOUBLE, &settings.dpi, 0,
     "DPI at which to read the file", "150" },
+  { "papersize", 's', POPT_ARG_STRING, &settings.papername, 0,
+    "Size of output paper", "A4" },
   POPT_AUTOHELP
   { NULL, 0, 0, NULL, 0, NULL, NULL, },
 };
 
 static void read_arguments (int argc, const char** argv)
 {
-  poptContext popt
-    = poptGetContext ("unscroll", argc, argv, options, 0);
+  poptContext popt;
   int rc;
+  const struct paper* paper;
+
+  popt = poptGetContext ("unscroll", argc, argv, options, 0);
 
   poptSetOtherOptionHelp(popt, "[OPTIONS]* <infile> <outfile>");
   if (argc < 2) {
@@ -57,6 +62,34 @@ static void read_arguments (int argc, const char** argv)
     exit (1);
   }
 
+  /* Deal with paper sizes... */
+  paperinit ();
+
+  if (!settings.papername) {
+    settings.papername = systempapername ();
+  }
+  paper = paperinfo (settings.papername);
+
+  if (!paper) {
+    fprintf (stderr, "Paper type %s not recognised.\n",
+             settings.papername);
+    exit (1);
+  }
+
+  settings.pswidth = paperpswidth (paper);
+  settings.psheight = paperpsheight (paper);
+
+  settings.psleft = (0.05 * settings.pswidth > 28.35) ?
+    0.05 * settings.pswidth : 28.35;
+  settings.pstop = (0.05 * settings.psheight > 28.35) ?
+    0.05 * settings.psheight : 28.35;
+  settings.psright = settings.psleft;
+  settings.psbottom = settings.pstop;
+
+  paperdone ();
+
+  /* Check and warn if the user was over-enthusiastic with command
+   * line options... */
   if (poptPeekArg (popt)) {
     fprintf (stderr, "Extra arguments on the command line ignored.\n");
   }
@@ -108,4 +141,19 @@ int main (int argc, const char** argv)
 
   g_object_unref (document);
   return 0;
+}
+
+double output_bb_height ()
+{
+  return settings.psheight - settings.pstop - settings.psbottom;
+}
+
+double output_bb_width ()
+{
+  return settings.pswidth - settings.psleft - settings.psright;
+}
+
+double output_rel_height ()
+{
+  return output_bb_height () / output_bb_width ();
 }

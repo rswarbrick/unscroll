@@ -109,6 +109,15 @@ static HunkData* find_hunks (const gboolean *lines, guint length,
     last = *(lines + i);
   }
 
+  // If hunk_n == 0 but *count > 0 then *count == 1 and there were no
+  // white lines at all. In which case, set (hunks+0)->start and end.
+  if ((hunk_n == 0) && (*count > 0)) {
+    g_assert (*count == 1);
+
+    (hunks+0)->start = 0;
+    (hunks+0)->end = length;
+  }
+
   return hunks;
 }
 

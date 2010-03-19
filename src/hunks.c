@@ -1,5 +1,6 @@
 #include "hunks.h"
 #include "page.h"
+#include "unscroll.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -41,6 +42,7 @@ static void rectangles_from_page (PopplerDocument *doc, guint pagenum,
     rect->src.y = (pi->hunks + i)->start;
     rect->src.height = (pi->hunks + i)->end - (pi->hunks + i)->start;
     rect->scaling = 1.0 / pi->bbox.width;
+
     *list = g_slist_prepend (*list, rect);
   }
 
@@ -124,7 +126,7 @@ GSList *find_new_layout (PopplerDocument* doc)
 
   printf ("Hunks found:  %5d\n", g_slist_length (srlist));
 
-  paged_lists = collate_pages (&srlist, 1.46);
+  paged_lists = collate_pages (&srlist, output_rel_height ());
 
   printf ("Pages before: %5d\nPages after:  %5d\n",
           poppler_document_get_n_pages (doc),
