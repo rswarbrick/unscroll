@@ -135,7 +135,7 @@ int main (int argc, const char** argv)
 
   pm = find_new_layout (document);
 
-  render_pdf (document, pm, "out.pdf");
+  render_pdf (document, pm, settings.outfile);
   
   destroy_page_mappings (&pm);
 
