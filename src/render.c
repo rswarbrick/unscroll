@@ -1,6 +1,7 @@
 #include "render.h"
 #include "hunks.h"
 #include "unscroll.h"
+#include "jpeg.h"
 #include <stdlib.h>
 #include <math.h>
 #include <cairo.h>
@@ -94,6 +95,27 @@ render_pdf_page (PopplerDocument* doc, GSList *rects, cairo_t *cairo)
 
     cairo_surface_t *img = get_rendered_page (doc, mr->src_page);
 
+    /*
+      To include jpeg data in cairo, you use
+      cairo_surface_set_mime_data, but you have to do this on an
+      existing surface. Since we assume that the jpeg will get
+      successfully passed through to the pdf, we allocate any old
+      block. Unfortunately, I think you have to use the memory, but
+      hopefully that doesn't matter too much.
+     */
+    guint length;
+    guchar *jpg = make_jpeg_hunk (img, mr->src.x, mr->src.y,
+                                  mr->src.width, mr->src.height,
+                                  &length);
+    cairo_surface_t *white_block =
+      cairo_image_surface_create (CAIRO_FORMAT_RGB24,
+                                  mr->src.width, mr->src.height);
+
+    cairo_surface_set_mime_data (white_block,
+                                 CAIRO_MIME_TYPE_JPEG,
+                                 jpg, length,
+                                 (cairo_destroy_func_t)&free_jpeg_hunk, jpg);
+
     cairo_identity_matrix (cairo);
     cairo_new_path (cairo);
 
@@ -105,13 +127,13 @@ render_pdf_page (PopplerDocument* doc, GSList *rects, cairo_t *cairo)
                      mr->src.width * scale, mr->src.height * scale);
 
     cairo_clip (cairo);
-
     cairo_scale (cairo, scale, scale);
-    cairo_set_source_surface (cairo, img, -mr->src.x, -mr->src.y);
-
+    cairo_set_source_surface (cairo, white_block, 0, 0);
     cairo_paint (cairo);
 
     cairo_reset_clip (cairo);
+
+    cairo_surface_destroy (white_block);
 
     rects = g_slist_next (rects);
   }
