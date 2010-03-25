@@ -1,0 +1,60 @@
+unscroll
+========
+
+unscroll is a program to take a pdf file which is the "wrong shape"
+and output one that's a more useful shape to print with.
+
+This was inspired by the files you create with some interactive
+whiteboard software, which are laid out on "a4" pages as follows.
+
+          /--------------\
+          |              |
+          |              |
+          |    #####     |
+          |    #####     |
+          |    #####     |
+          |    #####     |
+          |    #####     |
+          |    #####     |
+          |    #####     |
+          \--------------/
+
+This is useless for printing since everything's tiny and there's miles
+of whitespace everywhere. Fortunately, there are gaps in the black
+stuff, since it's actually lines of text.
+
+unscroll searches for rectangular hunks of non-white and uses a simple
+word-wrap algorithm to distribute them among more pages, hopefully
+ending up with much better use of the available space.
+
+
+After building the program, the simplest command line is something like
+
+   ./src/unscroll data/squiggle.pdf out.pdf
+
+This renders squiggle.pdf at 150 dpi and rejigs everything to fit
+nicely on your system's standard paper size (probably configured at
+/etc/papersize). It then renders the hunks with a jpeg quality setting
+of 75%.
+
+To change the defaults, you can use a command like
+
+   ./src/unscroll -d 200 -Q 30 -s a5 data/squiggle.pdf out.pdf
+
+for 200 dpi, 30% quality and A5 paper.
+
+
+
+
+TODO:
+
+- Implement a "justification" algorithm to spread out hunks on the
+  page more evenly.
+
+- Deal with off-white data better e.g. scanned images. This will
+  require the is_white stuff in page.c to be changed.
+
+- Automatically guess the correct dpi? Is this even possible?
+
+- Vary dpi between pages. This would work well if it was automatically
+  determined. Could be messy as command line arguments.
