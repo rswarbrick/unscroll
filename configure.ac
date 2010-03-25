@@ -16,5 +16,5 @@ AC_CHECK_LIB(jpeg, jpeg_CreateCompress,,AC_ERROR([Libjpeg required.]))
 AC_CHECK_HEADER([paper.h],,AC_ERROR([Libpaper required.]))
 AC_CHECK_HEADER([jpeglib.h],,AC_ERROR([Libjpeg required.]))
 
-AC_CONFIG_FILES([Makefile src/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile doc/Makefile])
 AC_OUTPUT

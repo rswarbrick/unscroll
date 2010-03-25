@@ -1,4 +1,4 @@
-SUBDIRS = src
+SUBDIRS = src doc
 
 vgenv = G_SLICE=always-malloc G_DEBUG=gc-friendly
 

@@ -1,0 +1,71 @@
+.pc
+.TH UNSCROLL 1 "March 2010" "0.1"
+.SH NAME
+unscroll \- reformat unfortunately shaped pdf files
+.SH SYNOPSIS
+.B unscroll
+[ options ]
+.I infile
+.I outfile
+.SH DESCRIPTION
+.B unscroll
+is a program to take a pdf file which is the "wrong shape" and output
+one that's a more useful shape to print.
+.PP
+This was inspired by the files you create with the Starboard
+interactive whiteboard software, which are laid out on "a4" pages as
+follows.
+.PP
+          /---------------\\
+          |               |
+          |               |
+          |     #####     |
+          |     #####     |
+          |     #####     |
+          |     #####     |
+          |     #####     |
+          |     #####     |
+          |     #####     |
+          \\---------------/
+.PP
+This is useless for printing since everything's tiny and there's miles
+of whitespace everywhere. Fortunately, there are gaps in the black
+stuff, since it's actually lines of text, so it's possible to break it
+up and allocate it to pages more usefully.
+.PP
+unscroll searches for rectangular hunks of non-white and uses a simple
+word-wrap algorithm to distribute them among more pages, hopefully
+ending up with much better use of the available space.
+.SH OPTIONS
+.TP
+\fB\-d\ \fIn\fP,\ \fB\-\-dpi\fP=\fIn\fP
+Render the input pdf files at the given resolution. A large value of
+the parameter will cause the program to take longer, but the output
+file might be higher quality. Fiddling with the \fB\-Q\fP option may
+allow a high dpi without a massive file. The default is 150.
+.TP
+\fB\-Q\ \fIn\fP,\ \fB\-\-quality\fP=\fIn\fP
+The output pdf file consists of jpeg images. Ask libjpeg to render
+them with the given quality (should be an integer between 0 and
+100). A small number will cause lots of compression artefacts to
+appear in the output file, but the file will be smaller. The default
+is 75.
+.TP
+\fB\-s\ \fIstr\fP,\ \fB\-\-papersize\fP=\fIstr\fP
+Choose the paper size of the output pdf. If this is not given, it will
+default to whatever the default chosen by libpaper is (probably
+\fIletter\fP or \fIa4\fP).
+.SH EXAMPLES
+.TP
+Default invocation with no options given:
+\fBunscroll\fP in.pdf out.pdf
+.PP
+Read the file at 400 dpi, but use a low jpeg quality of 20% to reduce
+the output file size. Output to C4 paper:
+.RS
+\fBunscroll\fP \-d 400 \-Q 20 \-s C4 in.pdf out.pdf
+.RE
+.SH AUTHOR
+Rupert Swarbrick (rswarbrick at gmail.com)
+.SH SEE ALSO
+.BR papersize (5)
