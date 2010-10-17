@@ -90,9 +90,14 @@ render_pdf_page (PopplerDocument* doc, GSList *rects, cairo_t *cairo)
       The scaling from source dimensions to output coordinates. This
       should be virt_to_out_scale divided by the width of the bounding
       box on the source page.
-    */
-    double scale = virt_to_out_scale / mr->src.width;
 
+      The output width for example should be mr->src.width * scale,
+      but it's possible that we had to scale down the block further,
+      so check by multiplying by the stored width in mr->dest (which
+      would be 1 if we hadn't scaled)
+    */
+    double scale = virt_to_out_scale / mr->src.width * mr->dest.width;
+    
     cairo_surface_t *img = get_rendered_page (doc, mr->src_page);
 
     /*

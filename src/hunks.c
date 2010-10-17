@@ -73,21 +73,35 @@ static GSList *collate_pages (GSList **pages, double bbox_rel_height)
       if (gap_height > 0.1) gap_height = 0.1;
     }
 
-    if (current_height == 0
-        ||
+    if (current_height == 0 ||
         current_height + hunk_height + gap_height <= bbox_rel_height) {
+
+      // If there's just one block, but it's too big to fit on the page
+      // comfortably, we should scale that particular block.
+      double extra_scaling = 1.0;
+      if (current_height == 0 && hunk_height > bbox_rel_height) {
+        extra_scaling = bbox_rel_height / hunk_height;
+        fprintf (stderr,
+                 "Warning: Big block needs scaling (to %.0f%%)\n",
+                 extra_scaling * 100);
+      }
+
       MappedRectangle *mr = g_new(MappedRectangle, 1);
       mr->src_page = sr->src_page;
       memcpy (&mr->src, &sr->src, sizeof(GdkRectangle));
 
-      mr->dest.x = 0;
-      mr->dest.width = 1;
+      /*
+        The virtual page is 1 unit wide. The block is extra_scaling
+        wide, so it should have left x coordinate (1-extra_scaling)/2.
+       */
+      mr->dest.x = (1.0-extra_scaling)/2.0;
+      mr->dest.width = extra_scaling;
       mr->dest.y = current_height + gap_height;
-      mr->dest.height = hunk_height;
+      mr->dest.height = hunk_height * extra_scaling;
 
       this_page = g_slist_prepend (this_page, mr);
 
-      current_height += hunk_height + gap_height;
+      current_height += hunk_height * extra_scaling + gap_height;
       current_page = sr->src_page;
 
       g_free (lastsr);
